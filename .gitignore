@@ -1,3 +1,20 @@
+# Excel temporary files
+~$*.xls*
+
+# Distribution folder - This is a build artifact
+# We might want to track the final releases, but ignore intermediate builds
+/dist/*
+!/dist/README.md
+
+# Backup files created by VBA editor
+*.bak
+
+# System files
+.DS_Store
+Thumbs.db
+
+
+
 
 # Office temporary files
 ~$*
