@@ -30,8 +30,8 @@ Public Sub StartProcess()
     Set settingsSheet = ThisWorkbook.Worksheets("Settings")
     M06_DebugLogger.WriteDebugLog "設定シートから値を取得します。"
     With settingsSheet
-        oldBookPath = .Range("D4").Value
-        judgeAddress = .Range("D5").Value
+        oldBookPath = .Range("D7").Value
+        judgeAddress = .Range("D8").Value
     End With
     M06_DebugLogger.WriteDebugLog "旧ブックパス: " & oldBookPath
     M06_DebugLogger.WriteDebugLog "判定アドレス: " & judgeAddress
@@ -49,15 +49,15 @@ Public Sub StartProcess()
     oldWb.Close SaveChanges:=False
     Set oldWb = Nothing
 
-    M06_DebugLogger.WriteDebugLog "SettingsシートのD13に型式を書き込みます。"
-    settingsSheet.Range("D13").Value = modelType
+    M06_DebugLogger.WriteDebugLog "SettingsシートのD22に型式を書き込みます。"
+    settingsSheet.Range("D22").Value = modelType
     
     ' Excelに関数の再計算を実行させる
     Application.Calculate
     M06_DebugLogger.WriteDebugLog "Excelの数式を再計算しました。"
 
     ' 再計算された結果を読み取る
-    templatePath = settingsSheet.Range("D15").Value
+    templatePath = settingsSheet.Range("D24").Value
     M06_DebugLogger.WriteDebugLog "再計算後のテンプレートパス: " & templatePath
 
     If templatePath = "" Or Not M03_FileHandler.FileExists(templatePath) Then

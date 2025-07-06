@@ -77,8 +77,19 @@ ContinueNextTask:
     Exit Sub
 
 TaskErrorHandler:
-    M06_DebugLogger.WriteDebugLog "タスク実行中にエラーが発生しました。エラーを記録し、次のタスクへ進みます。"
-    M04_Logger.WriteError "[警告]", sheetNo, procNo, procContent, Err.Description
+    M06_DebugLogger.WriteDebugLog "タスク実行中にエラーが発生しました。エラーを記録し、次のタスクへ進みます。 エラー: " & Err.Description
+    Dim errorProcContent As String
+    Select Case CInt(procNo)
+        Case 1: errorProcContent = "旧ブック_シート名"
+        Case 2: errorProcContent = "新ブック_シート名"
+        Case 3: errorProcContent = "旧ブック_コピー元アドレス"
+        Case 4: errorProcContent = "新ブック_コピー先アドレス"
+        Case 5: errorProcContent = "新ブック_削除するアドレス"
+        Case 6: errorProcContent = "新ブック_入力するアドレス"
+        Case 7: errorProcContent = "新ブック_入力する内容"
+        Case Else: errorProcContent = "不明な処理内容"
+    End Select
+    M04_Logger.WriteError "[警告]", sheetNo, procNo, errorProcContent, Err.Description
     Resume ContinueNextTask
 End Sub
 

@@ -41,9 +41,9 @@ Public Function CreateNewBook(ByVal templatePath As String) As String
     Set settingsSheet = ThisWorkbook.Worksheets("Settings")
     
     ' ファイル名の生成ロジックを修正 (Ryの重複を回避)
-    newBookName = "_" & settingsSheet.Range("D10").Value & "-" & _
-                  settingsSheet.Range("D11").Value & "-" & _
-                  Format(settingsSheet.Range("D12").Value, "yyyy.mm.dd") & ".xls"
+    newBookName = "_" & settingsSheet.Range("D19").Value & "-" & _
+                  settingsSheet.Range("D20").Value & "-" & _
+                  Format(settingsSheet.Range("D21").Value, "yyyy.mm.dd") & ".xls"
     M06_DebugLogger.WriteDebugLog "生成された新しいファイル名: " & newBookName
 
     ' 保存先フォルダの決定
