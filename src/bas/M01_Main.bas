@@ -12,10 +12,11 @@ Option Explicit
 Public Sub StartProcess()
     Dim oldBookPath As String
     Dim judgeAddress As String
-    Dim bookType As String
+    Dim modelType As String ' 「型式」を格納する変数
     Dim templatePath As String
     Dim newBookPath As String
     Dim oldWb As Workbook
+    Dim settingsSheet As Worksheet
 
     M06_DebugLogger.InitializeDebugLog
     M06_DebugLogger.WriteDebugLog "メイン処理を開始します。"
@@ -26,8 +27,9 @@ Public Sub StartProcess()
 
     On Error GoTo FatalErrorHandler
 
+    Set settingsSheet = ThisWorkbook.Worksheets("Settings")
     M06_DebugLogger.WriteDebugLog "設定シートから値を取得します。"
-    With ThisWorkbook.Worksheets("Settings")
+    With settingsSheet
         oldBookPath = .Range("D4").Value
         judgeAddress = .Range("D5").Value
     End With
@@ -41,19 +43,27 @@ Public Sub StartProcess()
         GoTo FatalErrorHandler
     End If
 
-    M06_DebugLogger.WriteDebugLog "旧ブックから種類を取得します。"
-    bookType = GetValueFromOldBook(oldWb, judgeAddress)
-    M06_DebugLogger.WriteDebugLog "取得した種類: " & bookType
+    M06_DebugLogger.WriteDebugLog "旧ブックから型式を取得します。"
+    modelType = GetValueFromOldBook(oldWb, judgeAddress)
+    M06_DebugLogger.WriteDebugLog "取得した型式: " & modelType
     oldWb.Close SaveChanges:=False
     Set oldWb = Nothing
 
-    M06_DebugLogger.WriteDebugLog "Listシートからテンプレートパスを検索します。"
-    templatePath = GetTemplatePathFromList(bookType)
-    If templatePath = "" Then
-        M04_Logger.WriteError "[致命的エラー]", "-", "-", "テンプレート特定失敗", "種類 '" & bookType & "' に一致するテンプレートが見つかりません。"
+    M06_DebugLogger.WriteDebugLog "SettingsシートのD13に型式を書き込みます。"
+    settingsSheet.Range("D13").Value = modelType
+    
+    ' Excelに関数の再計算を実行させる
+    Application.Calculate
+    M06_DebugLogger.WriteDebugLog "Excelの数式を再計算しました。"
+
+    ' 再計算された結果を読み取る
+    templatePath = settingsSheet.Range("D15").Value
+    M06_DebugLogger.WriteDebugLog "再計算後のテンプレートパス: " & templatePath
+
+    If templatePath = "" Or Not M03_FileHandler.FileExists(templatePath) Then
+        M04_Logger.WriteError "[致命的エラー]", "-", "-", "テンプレート特定失敗", "D15セルから有効なテンプレートパスが取得できませんでした。パス: " & templatePath
         GoTo FatalErrorHandler
     End If
-    M06_DebugLogger.WriteDebugLog "テンプレートパス: " & templatePath
 
     M06_DebugLogger.WriteDebugLog "新ブックを作成します。"
     newBookPath = M03_FileHandler.CreateNewBook(templatePath)
@@ -69,7 +79,8 @@ Public Sub StartProcess()
     GoTo Finally
 
 FatalErrorHandler:
-    M06_DebugLogger.WriteDebugLog "致命的なエラーが発生しました。処理を中断します。"
+    M06_DebugLogger.WriteDebugLog "致命的なエラーが発生しました。処理を中断します。 エラー: " & Err.Description
+    M04_Logger.WriteError "[致命的エラー]", "-", "-", "実行時エラー: " & Err.Number, Err.Description
     MsgBox "致命的なエラーが発生しました。処理を中断します。詳細はErrorシートを確認してください。"
 
 Finally:
@@ -86,18 +97,16 @@ End Sub
 Private Function GetValueFromOldBook(ByVal wb As Workbook, ByVal address As String) As String
     Dim sheetName As String
     Dim rangeAddress As String
-    Dim parts() As String
 
     M06_DebugLogger.WriteDebugLog "旧ブックの値取得を開始: " & address
     On Error GoTo GetValueError
 
-    parts = Split(address, "!")
-    sheetName = Replace(parts(0), "'", "")
-    rangeAddress = parts(1)
-    M06_DebugLogger.WriteDebugLog "シート名: " & sheetName & ", レンジ: " & rangeAddress
-
-    GetValueFromOldBook = wb.Worksheets(sheetName).Range(rangeAddress).Value
-    M06_DebugLogger.WriteDebugLog "値を取得しました: " & GetValueFromOldBook
+    If M03_FileHandler.ParseAddress(address, sheetName, rangeAddress) Then
+        GetValueFromOldBook = wb.Worksheets(sheetName).Range(rangeAddress).Value
+        M06_DebugLogger.WriteDebugLog "値を取得しました: " & GetValueFromOldBook
+    Else
+        GetValueFromOldBook = "" ' 解析失敗
+    End If
     Exit Function
 
 GetValueError:

@@ -35,6 +35,6 @@ Public Function GetRangeFromAddressString(ByVal sht As Worksheet, ByVal addressS
 
 ErrorHandler:
     Set GetRangeFromAddressString = Nothing
-    M06_DebugLogger.WriteDebugLog "アドレス文字列の変換中にエラーが発生しました: " & addressString
-    M04_Logger.WriteError "[警告]", "-", "-", "アドレス変換エラー", "'" & addressString & "' は有効なアドレスではありません。"
+    M06_DebugLogger.WriteDebugLog "アドレス文字列の変換中にエラーが発生しました: " & addressString & " エラー: " & Err.Description
+    M04_Logger.WriteError "[警告]", "-", "-", "アドレス変換エラー", "'" & addressString & "' は有効なアドレスではありません。詳細: " & Err.Description
 End Function

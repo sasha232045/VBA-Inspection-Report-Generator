@@ -48,22 +48,22 @@ Public Sub ExecuteAllTasks(ByVal oldBookPath As String, ByVal newBookPath As Str
         procValue = settingsSheet.Cells(i, "D").Value
         M06_DebugLogger.WriteDebugLog i & "行目: " & sheetNo & ", " & procNo & ", " & procContent & ", " & procValue
 
-        Select Case procContent
-            Case "旧ブック_シート名"
+        Select Case CInt(procNo) ' B列の数値で分岐
+            Case 1 '旧ブック_シート名'
                 oldSheetName = procValue
-            Case "新ブック_シート名"
+            Case 2 '新ブック_シート名'
                 newSheetName = procValue
-            Case "旧ブック_コピー元アドレス"
+            Case 3 '旧ブック_コピー元アドレス'
                 copyFromAddr = procValue
-            Case "新ブック_コピー先アドレス"
+            Case 4 '新ブック_コピー先アドレス'
                 copyToAddr = procValue
                 CopyData oldWb, newWb, oldSheetName, newSheetName, copyFromAddr, copyToAddr, sheetNo, procNo
-            Case "新ブック_削除するアドレス"
+            Case 5 '新ブック_削除するアドレス'
                 deleteAddr = procValue
                 DeleteData newWb, newSheetName, deleteAddr, sheetNo, procNo
-            Case "新ブック_入力するアドレス"
+            Case 6 '新ブック_入力するアドレス'
                 inputAddr = procValue
-            Case "新ブック_入力する内容"
+            Case 7 '新ブック_入力する内容'
                 inputValue = procValue
                 InputData newWb, newSheetName, inputAddr, inputValue, sheetNo, procNo
         End Select
@@ -105,6 +105,7 @@ Private Sub DeleteData(wb As Workbook, shtName As String, addr As String, sheetN
         M04_Logger.WriteLog "削除処理", "対象: '" & shtName & "'!" & addr
     Else
         M06_DebugLogger.WriteDebugLog "削除処理スキップ: アドレス変換に失敗しました。"
+        ' M04_Logger.WriteError を削除
     End If
 End Sub
 
@@ -121,5 +122,6 @@ Private Sub InputData(wb As Workbook, shtName As String, addr As String, val As 
         M04_Logger.WriteLog "入力処理", "対象: '" & shtName & "'!" & addr & ", 内容: " & val
     Else
         M06_DebugLogger.WriteDebugLog "入力処理スキップ: アドレス変換に失敗しました。"
+        ' M04_Logger.WriteError を削除
     End If
 End Sub

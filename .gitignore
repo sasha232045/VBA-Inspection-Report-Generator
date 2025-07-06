@@ -1,10 +1,11 @@
 # Excel temporary files
-# ~$*.xls*
+~$*.xls*
 
 # Distribution folder - This is a build artifact
 # We might want to track the final releases, but ignore intermediate builds
 # /dist/*
 !/dist/README.md
+# /dist/*.xls*
 
 # Backup files created by VBA editor
 *.bak
