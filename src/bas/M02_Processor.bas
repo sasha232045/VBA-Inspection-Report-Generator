@@ -90,6 +90,8 @@ TaskErrorHandler:
         Case Else: errorProcContent = "不明な処理内容"
     End Select
     M04_Logger.WriteError "[警告]", sheetNo, procNo, errorProcContent, Err.Description
+    hasWarnings = True ' 警告フラグを立てる
+    ExecuteAllTasks = True
     Resume ContinueNextTask
 End Sub
 
