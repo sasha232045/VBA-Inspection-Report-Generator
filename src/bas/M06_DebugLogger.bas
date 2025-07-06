@@ -39,7 +39,7 @@ End Sub
 ' [Args] message: ログメッセージ
 '--------------------------------------------------------------------------------------------------
 Public Sub WriteDebugLog(ByVal message As String)
-    If Not IS_DEBUG_MODE Then Exit Sub
+    If Not M01_Main.IS_DEBUG_LOG_ENABLED Then Exit Sub
 
     Dim debugSheet As Worksheet
     Dim newRow As Long

@@ -48,6 +48,7 @@ End Sub
 ' [Args] level, sheetNo, procNo, content, description
 '--------------------------------------------------------------------------------------------------
 Public Sub WriteError(ByVal level As String, ByVal sheetNo As String, ByVal procNo As String, ByVal content As String, ByVal description As String)
+    If Not M01_Main.IS_ERROR_LOG_ENABLED Then Exit Sub
     Dim errorSheet As Worksheet
     Dim newRow As Long
 

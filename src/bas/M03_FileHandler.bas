@@ -99,12 +99,14 @@ Public Function ParseAddress(ByVal address As String, ByRef outSheetName As Stri
 
     M06_DebugLogger.WriteDebugLog "アドレス解析を開始: " & address
     Set regex = CreateObject("VBScript.RegExp")
-    regex.Pattern = "^'?(.*?)'?!([^!]+)$" ' シート名とセル範囲を抽出する正規表現
+    ' パターン修正: 'シート名'!範囲 と シート名!範囲 の両方に対応
+    regex.Pattern = "^('(.+)'!|([^!]+)!)?([^!]+)$"
 
     If regex.Test(address) Then
         Set matches = regex.Execute(address)
-        outSheetName = matches(0).SubMatches(0)
-        outRangeAddress = matches(0).SubMatches(1)
+        ' シート名は2番目または3番目のサブマッチ
+        outSheetName = IIf(matches(0).SubMatches(1) <> "", matches(0).SubMatches(1), matches(0).SubMatches(2))
+        outRangeAddress = matches(0).SubMatches(3)
         ParseAddress = True
         M06_DebugLogger.WriteDebugLog "解析成功: シート名='" & outSheetName & "', アドレス='" & outRangeAddress & "'"
     Else

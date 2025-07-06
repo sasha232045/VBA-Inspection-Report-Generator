@@ -1,5 +1,9 @@
 Option Explicit
 
+' ログ出力制御 (True: 有効, False: 無効)
+Public Const IS_DEBUG_LOG_ENABLED As Boolean = True
+Public Const IS_ERROR_LOG_ENABLED As Boolean = True
+
 '==================================================================================================
 ' [Module] M01_Main
 ' [Description] メインコントローラーモジュール
@@ -61,7 +65,7 @@ Public Sub StartProcess()
     M06_DebugLogger.WriteDebugLog "再計算後のテンプレートパス: " & templatePath
 
     If templatePath = "" Or Not M03_FileHandler.FileExists(templatePath) Then
-        M04_Logger.WriteError "[致命的エラー]", "-", "-", "テンプレート特定失敗", "D15セルから有効なテンプレートパスが取得できませんでした。パス: " & templatePath
+        M04_Logger.WriteError "[致命的エラー]", "-", "-", "テンプレート特定失敗", "D24セルから有効なテンプレートパスが取得できませんでした。パス: " & templatePath
         GoTo FatalErrorHandler
     End If
 
