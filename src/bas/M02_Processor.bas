@@ -129,34 +129,87 @@ End Sub
 
 '--------------------------------------------------------------------------------------------------
 ' [Private Sub] DeleteData
-' [Description] 削除処理を実行
+' [Description] 削除処理を実行 (シート保護・詳細ログ対応)
 '--------------------------------------------------------------------------------------------------
 Private Sub DeleteData(wb As Workbook, shtName As String, addr As String, sheetNo As String, procNo As String)
+    Dim targetSheet As Worksheet
     Dim targetRange As Range
-    M06_DebugLogger.WriteDebugLog "削除処理実行: 対象[" & shtName & "!" & addr & "]"
-    Set targetRange = M05_Utility.GetRangeFromAddressString(wb.Worksheets(shtName), addr)
-    If Not targetRange Is Nothing Then
-        targetRange.MergeArea.ClearContents
-        M04_Logger.WriteLog "削除処理", "対象: '" & shtName & "'!" & addr
-    Else
-        M06_DebugLogger.WriteDebugLog "削除処理スキップ: アドレス変換に失敗しました。"
-        ' M04_Logger.WriteError を削除
+
+    M06_DebugLogger.WriteDebugLog "[DeleteData] 開始: 対象[" & shtName & "!" & addr & "]"
+
+    On Error GoTo GetSheetError
+    Set targetSheet = wb.Worksheets(shtName)
+    M06_DebugLogger.WriteDebugLog "[DeleteData] シートオブジェクト取得成功"
+    On Error GoTo 0
+
+    On Error GoTo GetRangeError
+    Set targetRange = M05_Utility.GetRangeFromAddressString(targetSheet, addr)
+    If targetRange Is Nothing Then
+        M06_DebugLogger.WriteDebugLog "[DeleteData] 致命的エラー: アドレス変換失敗。アドレス: " & addr
+        Exit Sub
     End If
+    M06_DebugLogger.WriteDebugLog "[DeleteData] レンジオブジェクト取得成功"
+    On Error GoTo 0
+
+    On Error GoTo UnprotectError
+    targetSheet.Unprotect
+    M06_DebugLogger.WriteDebugLog "[DeleteData] シート保護解除成功"
+    On Error GoTo 0
+
+    On Error GoTo ClearContentsError
+    targetRange.MergeArea.ClearContents
+    M06_DebugLogger.WriteDebugLog "[DeleteData] ClearContents 正常終了"
+    On Error GoTo 0
+
+    On Error GoTo ProtectError
+    targetSheet.Protect
+    M06_DebugLogger.WriteDebugLog "[DeleteData] シート再保護成功"
+    On Error GoTo 0
+
+    M04_Logger.WriteLog "削除処理", "対象: '" & shtName & "'!" & addr
+    Exit Sub
+
+GetSheetError:
+    M06_DebugLogger.WriteDebugLog "[DeleteData] 致命的エラー: シート取得失敗。シート名='" & shtName & "'. エラー: " & Err.Description
+    Exit Sub
+GetRangeError:
+    M06_DebugLogger.WriteDebugLog "[DeleteData] 致命的エラー: レンジ取得失敗。アドレス='" & addr & "'. エラー: " & Err.Description
+    Exit Sub
+UnprotectError:
+    M06_DebugLogger.WriteDebugLog "[DeleteData] 警告: 保護解除失敗。処理を続行します。エラー: " & Err.Description
+    Resume Next
+ClearContentsError:
+    M06_DebugLogger.WriteDebugLog "[DeleteData] 致命的エラー: ClearContents失敗。エラー: " & Err.Description
+    Resume ProtectLabel
+ProtectError:
+    M06_DebugLogger.WriteDebugLog "[DeleteData] 警告: 再保護失敗。エラー: " & Err.Description
+ProtectLabel:
+    targetSheet.Protect
 End Sub
 
 '--------------------------------------------------------------------------------------------------
 ' [Private Sub] InputData
-' [Description] 入力処理を実行 (結合セル対応)
+' [Description] 入力処理を実行 (結合セル・シート保護対応)
 '--------------------------------------------------------------------------------------------------
 Private Sub InputData(wb As Workbook, shtName As String, addr As String, val As String, sheetNo As String, procNo As String)
+    Dim targetSheet As Worksheet
     Dim targetRange As Range
     Dim cell As Range
 
     M06_DebugLogger.WriteDebugLog "入力処理実行: 対象[" & shtName & "!" & addr & "] に '" & val & "' を入力"
-    Set targetRange = M05_Utility.GetRangeFromAddressString(wb.Worksheets(shtName), addr)
+    On Error GoTo GetSheetError
+    Set targetSheet = wb.Worksheets(shtName)
+    On Error GoTo 0
+
+    Set targetRange = M05_Utility.GetRangeFromAddressString(targetSheet, addr)
 
     If Not targetRange Is Nothing Then
-        ' 範囲内の各セルをループし、結合されている場合は左上のセルに書き込む
+        On Error GoTo UnprotectError
+        targetSheet.Unprotect
+        M06_DebugLogger.WriteDebugLog "シート '" & shtName & "' の保護を解除しました。"
+        On Error GoTo 0
+
+        On Error GoTo InputValueError
         For Each cell In targetRange
             If cell.MergeCells Then
                 cell.MergeArea.Cells(1, 1).Value = val
@@ -164,8 +217,24 @@ Private Sub InputData(wb As Workbook, shtName As String, addr As String, val As 
                 cell.Value = val
             End If
         Next cell
+        M06_DebugLogger.WriteDebugLog "入力処理が完了しました。"
+        On Error GoTo 0
+
+        targetSheet.Protect
+        M06_DebugLogger.WriteDebugLog "シート '" & shtName & "' を再度保護しました。"
         M04_Logger.WriteLog "入力処理", "対象: '" & shtName & "'!" & addr & ", 内容: " & val
     Else
         M06_DebugLogger.WriteDebugLog "入力処理スキップ: アドレス変換に失敗しました。"
     End If
+    Exit Sub
+
+GetSheetError:
+    M06_DebugLogger.WriteDebugLog "入力処理エラー: シート '" & shtName & "' の取得に失敗しました。"
+    Exit Sub
+UnprotectError:
+    M06_DebugLogger.WriteDebugLog "入力処理警告: シート '" & shtName & "' の保護解除に失敗しました。処理を続行します。"
+    Resume Next
+InputValueError:
+    M06_DebugLogger.WriteDebugLog "入力処理エラー: 値の入力に失敗しました。セル: " & cell.Address & ", エラー: " & Err.Description
+    targetSheet.Protect ' エラーが発生してもシートは再度保護する
 End Sub
