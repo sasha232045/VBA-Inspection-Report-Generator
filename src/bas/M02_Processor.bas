@@ -10,7 +10,13 @@ Option Explicit
 ' [Description] Settingsシートの定義に基づき、全てのデータ移行タスクを実行する
 ' [Args] oldBookPath: 旧ブックのフルパス, newBookPath: 新ブックのフルパス
 '--------------------------------------------------------------------------------------------------
-Public Sub ExecuteAllTasks(ByVal oldBookPath As String, ByVal newBookPath As String)
+'--------------------------------------------------------------------------------------------------
+' [Function] ExecuteAllTasks
+' [Description] Settingsシートの定義に基づき、全てのデータ移行タスクを実行する
+' [Args] oldBookPath: 旧ブックのフルパス, newBookPath: 新ブックのフルパス
+' [Returns] 警告が発生した場合にTrueを返す
+'--------------------------------------------------------------------------------------------------
+Public Function ExecuteAllTasks(ByVal oldBookPath As String, ByVal newBookPath As String) As Boolean
     Dim settingsSheet As Worksheet
     Dim lastRow As Long
     Dim i As Long
@@ -20,6 +26,8 @@ Public Sub ExecuteAllTasks(ByVal oldBookPath As String, ByVal newBookPath As Str
     Dim deleteAddr As String
     Dim inputAddr As String, inputValue As String
     Dim sheetNo As String, procNo As String, procContent As String, procValue As String
+
+    ExecuteAllTasks = False ' 初期値はFalse (警告なし)
 
     M06_DebugLogger.WriteDebugLog "データ移行処理(ExecuteAllTasks)を開始します。"
     M06_DebugLogger.WriteDebugLog "旧ブックパス: " & oldBookPath
@@ -35,7 +43,7 @@ Public Sub ExecuteAllTasks(ByVal oldBookPath As String, ByVal newBookPath As Str
     If oldWb Is Nothing Or newWb Is Nothing Then
         M04_Logger.WriteError "[致命的エラー]", "-", "-", "ブックオープン失敗", "処理対象のブックが開けませんでした。"
         M06_DebugLogger.WriteDebugLog "ブックが開けなかったため、処理を中断します。"
-        Exit Sub
+        Exit Function
     End If
 
     M06_DebugLogger.WriteDebugLog "SettingsシートのA51からループを開始します。"
@@ -74,7 +82,7 @@ ContinueNextTask:
     M06_DebugLogger.WriteDebugLog "すべてのタスクが完了しました。ブックを保存して閉じます。"
     oldWb.Close SaveChanges:=False
     newWb.Close SaveChanges:=True
-    Exit Sub
+    Exit Function
 
 TaskErrorHandler:
     M06_DebugLogger.WriteDebugLog "タスク実行中にエラーが発生しました。エラーを記録し、次のタスクへ進みます。 エラー: " & Err.Description
@@ -90,18 +98,32 @@ TaskErrorHandler:
         Case Else: errorProcContent = "不明な処理内容"
     End Select
     M04_Logger.WriteError "[警告]", sheetNo, procNo, errorProcContent, Err.Description
-    hasWarnings = True ' 警告フラグを立てる
-    ExecuteAllTasks = True
+    ExecuteAllTasks = True ' 警告があったことを示す戻り値をセット
     Resume ContinueNextTask
-End Sub
+End Function
 
 '--------------------------------------------------------------------------------------------------
 ' [Private Sub] CopyData
-' [Description] コピー処理を実行
+' [Description] コピー処理を実行 (PasteSpecialによる堅牢な結合セル対応)
 '--------------------------------------------------------------------------------------------------
 Private Sub CopyData(oldWb As Workbook, newWb As Workbook, oldShtName As String, newShtName As String, srcAddr As String, dstAddr As String, sheetNo As String, procNo As String)
+    Dim srcRange As Range
+    Dim dstCell As Range
+
     M06_DebugLogger.WriteDebugLog "コピー処理実行: 旧[" & oldShtName & "!" & srcAddr & "] -> 新[" & newShtName & "!" & dstAddr & "]"
-    oldWb.Worksheets(oldShtName).Range(srcAddr).Copy newWb.Worksheets(newShtName).Range(dstAddr)
+
+    Set srcRange = oldWb.Worksheets(oldShtName).Range(srcAddr)
+    Set dstCell = newWb.Worksheets(newShtName).Range(dstAddr).Cells(1, 1)
+
+    ' PasteSpecialを使用して、結合セルの問題を回避しつつ、書式ごとコピーする
+    srcRange.Copy
+    ' 最初に「値と数値の書式」を貼り付け
+    dstCell.PasteSpecial Paste:=xlPasteValuesAndNumberFormats
+    ' 次に「書式（結合状態、色、罫線など）」を貼り付け
+    dstCell.PasteSpecial Paste:=xlPasteFormats
+
+    Application.CutCopyMode = False ' コピーモードを解除
+
     M04_Logger.WriteLog "コピー処理", "旧: '" & oldShtName & "'!" & srcAddr & " -> 新: '" & newShtName & "'!" & dstAddr
 End Sub
 
@@ -124,17 +146,26 @@ End Sub
 
 '--------------------------------------------------------------------------------------------------
 ' [Private Sub] InputData
-' [Description] 入力処理を実行
+' [Description] 入力処理を実行 (結合セル対応)
 '--------------------------------------------------------------------------------------------------
 Private Sub InputData(wb As Workbook, shtName As String, addr As String, val As String, sheetNo As String, procNo As String)
     Dim targetRange As Range
+    Dim cell As Range
+
     M06_DebugLogger.WriteDebugLog "入力処理実行: 対象[" & shtName & "!" & addr & "] に '" & val & "' を入力"
     Set targetRange = M05_Utility.GetRangeFromAddressString(wb.Worksheets(shtName), addr)
+
     If Not targetRange Is Nothing Then
-        targetRange.Value = val
+        ' 範囲内の各セルをループし、結合されている場合は左上のセルに書き込む
+        For Each cell In targetRange
+            If cell.MergeCells Then
+                cell.MergeArea.Cells(1, 1).Value = val
+            Else
+                cell.Value = val
+            End If
+        Next cell
         M04_Logger.WriteLog "入力処理", "対象: '" & shtName & "'!" & addr & ", 内容: " & val
     Else
         M06_DebugLogger.WriteDebugLog "入力処理スキップ: アドレス変換に失敗しました。"
-        ' M04_Logger.WriteError を削除
     End If
 End Sub

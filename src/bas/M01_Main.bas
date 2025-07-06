@@ -9,7 +9,7 @@ Public Const IS_ERROR_LOG_ENABLED As Boolean = True
 ' [Description] メインコントローラーモジュール
 '==================================================================================================
 
-"""'--------------------------------------------------------------------------------------------------
+'--------------------------------------------------------------------------------------------------
 ' [Sub] StartProcess
 ' [Description] 処理全体の流れを制御するメインプロシージャ
 '--------------------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ Public Sub StartProcess()
     With settingsSheet
         oldBookPath = .Range("D7").Value
         judgeAddress = .Range("D8").Value
-        templatePath = .Range("D24").Value ' D24を直接読み込む
+        templatePath = .Range("D24").Value
     End With
     M06_DebugLogger.WriteDebugLog "旧ブックパス: " & oldBookPath
     M06_DebugLogger.WriteDebugLog "判定アドレス: " & judgeAddress
@@ -89,15 +89,15 @@ Public Sub StartProcess()
     GoTo Finally
 
 FatalErrorHandler:
-    M06_DebugLogger.WriteDebugLog "致命的なエラーが発生しました。処理を中断します。 エラー: " & Err.Description
-    M04_Logger.WriteError "[致命的エラー]", "-", "-", "実行時エラー: " & Err.Number, Err.Description
+    M06_DebugLogger.WriteDebugLog "致命的なエラーが発生しました。処理を中断します。 エラー: " & Err.description
+    M04_Logger.WriteError "[致命的エラー]", "-", "-", "実行時エラー: " & Err.Number, Err.description
     MsgBox "予期せぬエラーで処理が中断しました。" & vbCrLf & "ErrorLogシートを確認してください。", vbCritical, "致命的なエラー"
 
 Finally:
     Application.ScreenUpdating = True
     M06_DebugLogger.WriteDebugLog "画面描画を再開し、処理を終了します。"
 End Sub
-""
+
 
 '--------------------------------------------------------------------------------------------------
 ' [Function] GetValueFromOldBook
@@ -148,3 +148,4 @@ Private Function GetTemplatePathFromList(ByVal bookType As String) As String
         M06_DebugLogger.WriteDebugLog "テンプレートパスが見つかりませんでした。"
     End If
 End Function
+
