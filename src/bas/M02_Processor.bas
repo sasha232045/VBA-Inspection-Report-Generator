@@ -98,15 +98,34 @@ End Sub
 '--------------------------------------------------------------------------------------------------
 Private Sub DeleteData(wb As Workbook, shtName As String, addr As String, sheetNo As String, procNo As String)
     Dim targetRange As Range
+    Dim cell As Range
+    
+    On Error GoTo DeleteError
     M06_DebugLogger.WriteDebugLog "削除処理実行: 対象[" & shtName & "!" & addr & "]"
     Set targetRange = M05_Utility.GetRangeFromAddressString(wb.Worksheets(shtName), addr)
     If Not targetRange Is Nothing Then
-        targetRange.MergeArea.ClearContents
+        ' 結合セルを考慮した削除処理
+        For Each cell In targetRange
+            On Error Resume Next
+            If cell.MergeCells Then
+                cell.MergeArea.ClearContents
+                M06_DebugLogger.WriteDebugLog "結合セル " & cell.MergeArea.Address & " の内容を削除しました。"
+            Else
+                cell.ClearContents
+                M06_DebugLogger.WriteDebugLog "セル " & cell.Address & " の内容を削除しました。"
+            End If
+            On Error GoTo DeleteError
+        Next cell
         M04_Logger.WriteLog "削除処理", "対象: '" & shtName & "'!" & addr
+        M06_DebugLogger.WriteDebugLog "削除処理が正常に完了しました。"
     Else
         M06_DebugLogger.WriteDebugLog "削除処理スキップ: アドレス変換に失敗しました。"
-        ' M04_Logger.WriteError を削除
     End If
+    Exit Sub
+    
+DeleteError:
+    M06_DebugLogger.WriteDebugLog "削除処理でエラーが発生しました: " & Err.Description
+    M04_Logger.WriteError "[警告]", sheetNo, procNo, "削除処理エラー", "アドレス: " & addr & ", エラー: " & Err.Description
 End Sub
 
 '--------------------------------------------------------------------------------------------------
