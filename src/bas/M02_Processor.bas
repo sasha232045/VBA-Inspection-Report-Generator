@@ -20,10 +20,27 @@ Public Sub ExecuteAllTasks(ByVal oldBookPath As String, ByVal newBookPath As Str
     Dim deleteAddr As String
     Dim inputAddr As String, inputValue As String
     Dim sheetNo As String, procNo As String, procContent As String, procValue As String
+    Dim originalDisplayAlerts As Boolean
+    Dim originalAskToUpdateLinks As Boolean
+    ' Application.CheckCompatibilityは古いExcelバージョンでサポートされていない可能性があるため削除
 
     M06_DebugLogger.WriteDebugLog "データ移行処理(ExecuteAllTasks)を開始します。"
     M06_DebugLogger.WriteDebugLog "旧ブックパス: " & oldBookPath
     M06_DebugLogger.WriteDebugLog "新ブックパス: " & newBookPath
+
+    ' 強力なダイアログ抑制設定を保存
+    originalDisplayAlerts = Application.DisplayAlerts
+    originalAskToUpdateLinks = Application.AskToUpdateLinks
+    
+    Application.DisplayAlerts = False
+    Application.AskToUpdateLinks = False
+    
+    ' CheckCompatibilityプロパティの安全な設定
+    On Error Resume Next
+    Application.CheckCompatibility = False ' 互換性チェックを無効化（サポートされている場合のみ）
+    On Error GoTo 0
+    
+    M06_DebugLogger.WriteDebugLog "ダイアログ抑制とアラート無効化を設定しました。"
 
     Set settingsSheet = ThisWorkbook.Worksheets("Settings")
     lastRow = settingsSheet.Cells(settingsSheet.Rows.Count, "A").End(xlUp).Row
@@ -35,7 +52,7 @@ Public Sub ExecuteAllTasks(ByVal oldBookPath As String, ByVal newBookPath As Str
     If oldWb Is Nothing Or newWb Is Nothing Then
         M04_Logger.WriteError "[致命的エラー]", "-", "-", "ブックオープン失敗", "処理対象のブックが開けませんでした。"
         M06_DebugLogger.WriteDebugLog "ブックが開けなかったため、処理を中断します。"
-        Exit Sub
+        GoTo RestoreSettings
     End If
 
     M06_DebugLogger.WriteDebugLog "SettingsシートのA19からループを開始します。"
@@ -87,7 +104,28 @@ ContinueNextTask:
 
     M06_DebugLogger.WriteDebugLog "すべてのタスクが完了しました。ブックを保存して閉じます。"
     oldWb.Close SaveChanges:=False
-    newWb.Close SaveChanges:=True
+    
+    ' 新ブックを強制保存（ダイアログ抑制）
+    On Error Resume Next
+    newWb.Save ' 強制保存
+    If Err.Number <> 0 Then
+        M06_DebugLogger.WriteDebugLog "保存時にエラーが発生しましたが、処理を続行します: " & Err.Description
+    End If
+    On Error GoTo 0
+    
+    newWb.Close SaveChanges:=False ' 既に保存済みなのでFalse
+
+RestoreSettings:
+    ' アプリケーション設定を復元
+    Application.DisplayAlerts = originalDisplayAlerts
+    Application.AskToUpdateLinks = originalAskToUpdateLinks
+    
+    ' CheckCompatibilityプロパティの安全な復元
+    On Error Resume Next
+    Application.CheckCompatibility = True ' サポートされている場合のみ復元
+    On Error GoTo 0
+    
+    M06_DebugLogger.WriteDebugLog "アプリケーション設定を復元しました。"
     Exit Sub
 
 TaskErrorHandler:
