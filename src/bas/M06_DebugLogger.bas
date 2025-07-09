@@ -1,47 +1,55 @@
 Option Explicit
 
-Private Const DEBUG_LOG_FILE_NAME As String = "DebugLog.txt"
-Private fsoDebug As Object
-Private logStreamDebug As Object
+'==================================================================================================
+' [Module] M06_DebugLogger
+' [Description] デバッグログ出力モジュール
+'==================================================================================================
 
 ' デバッグロガーを初期化する
 '================================================================================================'
-Public Sub InitializeDebugLogger()
-    Set fsoDebug = CreateObject("Scripting.FileSystemObject")
-    Dim logFolderPath As String
-    logFolderPath = ThisWorkbook.Path & "\dist"
+Public Sub InitializeDebugLog()
+    Dim debugSheet As Worksheet
     
-    If Not fsoDebug.FolderExists(logFolderPath) Then
-        fsoDebug.CreateFolder logFolderPath
+    ' DebugLogシートの存在確認・作成
+    On Error Resume Next
+    Set debugSheet = ThisWorkbook.Worksheets("DebugLog")
+    On Error GoTo 0
+    
+    If debugSheet Is Nothing Then
+        Set debugSheet = ThisWorkbook.Worksheets.Add
+        debugSheet.Name = "DebugLog"
     End If
     
-    Dim logFilePath As String
-    logFilePath = logFolderPath & "\" & DEBUG_LOG_FILE_NAME
+    ' ヘッダー行の設定
+    debugSheet.Cells.Clear
+    debugSheet.Cells(1, 1).Value = "日時"
+    debugSheet.Cells(1, 2).Value = "デバッグメッセージ"
     
-    ' ログファイルを新規作成（上書き）
-    Set logStreamDebug = fsoDebug.CreateTextFile(logFilePath, True)
-End Sub
-
-' デバッグロガーをクリーンアップする
-'================================================================================================'
-Public Sub CleanupDebugLogger()
-    If Not logStreamDebug Is Nothing Then
-        logStreamDebug.Close
-    End If
-    Set logStreamDebug = Nothing
-    Set fsoDebug = Nothing
+    ' 列幅の調整
+    debugSheet.Columns("A:A").ColumnWidth = 20
+    debugSheet.Columns("B:B").ColumnWidth = 100
+    
+    ' ヘッダー行の書式設定
+    With debugSheet.Range("A1:B1")
+        .Font.Bold = True
+        .Interior.Color = RGB(200, 200, 200)
+    End With
 End Sub
 
 ' デバッグログを出力する
-' @param moduleName モジュール名
-' @param procedureName プロシージャ名
 ' @param message ログメッセージ
 '================================================================================================'
-Public Sub DebugLog(ByVal moduleName As String, ByVal procedureName As String, ByVal message As String)
-    If logStreamDebug Is Nothing Then
-        ' 初期化されていない場合は何もしない（またはエラーを発生させる）
-        Exit Sub
-    End If
+Public Sub WriteDebugLog(ByVal message As String)
+    Dim debugSheet As Worksheet
+    Dim lastRow As Long
     
-    logStreamDebug.WriteLine Now() & " [Debug] - " & moduleName & " - " & procedureName & " - " & message
+    On Error Resume Next
+    Set debugSheet = ThisWorkbook.Worksheets("DebugLog")
+    On Error GoTo 0
+    
+    If Not debugSheet Is Nothing Then
+        lastRow = debugSheet.Cells(debugSheet.Rows.Count, 1).End(xlUp).Row
+        debugSheet.Cells(lastRow + 1, 1).Value = Format(Now(), "yyyy/m/d h:mm")
+        debugSheet.Cells(lastRow + 1, 2).Value = message
+    End If
 End Sub

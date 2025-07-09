@@ -12,12 +12,38 @@ Option Explicit
 ' [Returns] Workbookオブジェクト (失敗時: Nothing)
 '--------------------------------------------------------------------------------------------------
 Public Function OpenWorkbook(ByVal path As String) As Workbook
+    Dim originalDisplayAlerts As Boolean
+    Dim originalAskToUpdateLinks As Boolean
+    Dim originalEnableEvents As Boolean
+    
     M06_DebugLogger.WriteDebugLog "ワークブックを開きます: " & path
+    
+    ' 現在の設定を保存
+    originalDisplayAlerts = Application.DisplayAlerts
+    originalAskToUpdateLinks = Application.AskToUpdateLinks
+    originalEnableEvents = Application.EnableEvents
+    
+    ' ダイアログを無効化
+    Application.DisplayAlerts = False
+    Application.AskToUpdateLinks = False
+    Application.EnableEvents = False
+    
     On Error Resume Next
-    Set OpenWorkbook = Workbooks.Open(path)
+    Set OpenWorkbook = Workbooks.Open(path, UpdateLinks:=0, ReadOnly:=False, _
+                                      IgnoreReadOnlyRecommended:=True, _
+                                      Notify:=False, _
+                                      AddToMru:=False)
     On Error GoTo 0
+    
+    ' 設定を復元
+    Application.DisplayAlerts = originalDisplayAlerts
+    Application.AskToUpdateLinks = originalAskToUpdateLinks
+    Application.EnableEvents = originalEnableEvents
+    
     If OpenWorkbook Is Nothing Then
         M06_DebugLogger.WriteDebugLog "ワークブックを開けませんでした。"
+    Else
+        M06_DebugLogger.WriteDebugLog "ワークブックを正常に開きました。"
     End If
 End Function
 
@@ -33,6 +59,7 @@ Public Function CreateNewBook(ByVal templatePath As String) As String
     Dim newBookPath As String
     Dim settingsSheet As Worksheet
     Dim saveFolderPath As String
+    Dim originalDisplayAlerts As Boolean
 
     M06_DebugLogger.WriteDebugLog "新しいブックの作成を開始します。"
     M06_DebugLogger.WriteDebugLog "テンプレートパス: " & templatePath
@@ -71,7 +98,20 @@ Public Function CreateNewBook(ByVal templatePath As String) As String
         fso.CreateFolder saveFolderPath
     End If
 
-    fso.CopyFile templatePath, newBookPath, True
+    ' ダイアログを無効化して強制コピー
+    originalDisplayAlerts = Application.DisplayAlerts
+    Application.DisplayAlerts = False
+    
+    On Error Resume Next
+    fso.CopyFile templatePath, newBookPath, True ' True = 上書き許可
+    If Err.Number <> 0 Then
+        M06_DebugLogger.WriteDebugLog "ファイルコピー中にエラーが発生しました: " & Err.Description
+        M04_Logger.WriteError "[エラー]", "-", "-", "ファイルコピー失敗", "テンプレートファイルのコピーに失敗しました。エラー: " & Err.Description
+    End If
+    On Error GoTo 0
+    
+    Application.DisplayAlerts = originalDisplayAlerts
+    
     Set fso = Nothing
 
     CreateNewBook = newBookPath
@@ -119,3 +159,42 @@ Public Function ParseAddress(ByVal address As String, ByRef outSheetName As Stri
         M04_Logger.WriteError "[警告]", "-", "-", "アドレス解析失敗", "'" & address & "' は有効な形式ではありません。"
     End If
 End Function
+
+'--------------------------------------------------------------------------------------------------
+' [Public Sub] OpenFileLocation
+' [Description] 指定されたファイルパスの保存フォルダをエクスプローラーで開く（ファイル選択状態）
+' [Args] filePath: ファイルのフルパス
+'--------------------------------------------------------------------------------------------------
+Public Sub OpenFileLocation(ByVal filePath As String)
+    Dim fso As Object
+    Dim folderPath As String
+    Dim fileName As String
+    
+    On Error GoTo OpenFolderError
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' ファイルが存在するかチェック
+    If fso.FileExists(filePath) Then
+        ' ファイルを選択状態でエクスプローラーを開く
+        Shell "explorer.exe /select,""" & filePath & """", vbNormalFocus
+        M06_DebugLogger.WriteDebugLog "ファイルを選択状態でエクスプローラーを開きました: " & filePath
+    Else
+        ' ファイルが存在しない場合はフォルダのみ開く
+        folderPath = fso.GetParentFolderName(filePath)
+        If fso.FolderExists(folderPath) Then
+            Shell "explorer.exe """ & folderPath & """", vbNormalFocus
+            M06_DebugLogger.WriteDebugLog "保存フォルダを開きました: " & folderPath
+        Else
+            MsgBox "保存フォルダが見つかりません: " & folderPath, vbExclamation, "フォルダエラー"
+            M06_DebugLogger.WriteDebugLog "保存フォルダが見つかりません: " & folderPath
+        End If
+    End If
+    
+    Set fso = Nothing
+    Exit Sub
+    
+OpenFolderError:
+    MsgBox "フォルダを開くことができませんでした。" & vbCrLf & "エラー: " & Err.Description, vbCritical, "エラー"
+    M06_DebugLogger.WriteDebugLog "フォルダを開く際にエラーが発生しました: " & Err.Description
+    Set fso = Nothing
+End Sub
