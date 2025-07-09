@@ -30,11 +30,22 @@ Public Sub StartProcess()
     Set settingsSheet = ThisWorkbook.Worksheets("Settings")
     M06_DebugLogger.WriteDebugLog "設定シートから値を取得します。"
     With settingsSheet
-        oldBookPath = .Range("D4").Value
-        judgeAddress = .Range("D5").Value
+        oldBookPath = Trim(.Range("D7").Value)
+        judgeAddress = Trim(.Range("D8").Value)
     End With
     M06_DebugLogger.WriteDebugLog "旧ブックパス: " & oldBookPath
     M06_DebugLogger.WriteDebugLog "判定アドレス: " & judgeAddress
+
+    ' 必須項目のチェックを追加
+    If oldBookPath = "" Then
+        M04_Logger.WriteError "[致命的エラー]", "-", "-", "設定エラー", "旧ブック_ファイルパス (D7) が入力されていません。"
+        GoTo FatalErrorHandler
+    End If
+    
+    If judgeAddress = "" Then
+        M04_Logger.WriteError "[致命的エラー]", "-", "-", "設定エラー", "旧ブック_新ブック名判定アドレス (D8) が入力されていません。"
+        GoTo FatalErrorHandler
+    End If
 
     M06_DebugLogger.WriteDebugLog "旧ブックを開きます。"
     Set oldWb = M03_FileHandler.OpenWorkbook(oldBookPath)
@@ -49,19 +60,19 @@ Public Sub StartProcess()
     oldWb.Close SaveChanges:=False
     Set oldWb = Nothing
 
-    M06_DebugLogger.WriteDebugLog "SettingsシートのD13に型式を書き込みます。"
-    settingsSheet.Range("D13").Value = modelType
+    M06_DebugLogger.WriteDebugLog "SettingsシートのD21に型式を書き込みます。"
+    settingsSheet.Range("D21").Value = modelType
     
     ' Excelに関数の再計算を実行させる
     Application.Calculate
     M06_DebugLogger.WriteDebugLog "Excelの数式を再計算しました。"
 
     ' 再計算された結果を読み取る
-    templatePath = settingsSheet.Range("D15").Value
+    templatePath = settingsSheet.Range("D24").Value
     M06_DebugLogger.WriteDebugLog "再計算後のテンプレートパス: " & templatePath
 
     If templatePath = "" Or Not M03_FileHandler.FileExists(templatePath) Then
-        M04_Logger.WriteError "[致命的エラー]", "-", "-", "テンプレート特定失敗", "D15セルから有効なテンプレートパスが取得できませんでした。パス: " & templatePath
+        M04_Logger.WriteError "[致命的エラー]", "-", "-", "テンプレート特定失敗", "D24セルから有効なテンプレートパスが取得できませんでした。パス: " & templatePath
         GoTo FatalErrorHandler
     End If
 
@@ -112,7 +123,7 @@ Private Function GetValueFromOldBook(ByVal wb As Workbook, ByVal address As Stri
 GetValueError:
     GetValueFromOldBook = ""
     M06_DebugLogger.WriteDebugLog "値の取得でエラーが発生しました。"
-    M04_Logger.WriteError "[警告]", "-", "-", "値の取得失敗", "旧ブックの '" & address & "' から値を取得できませんでした。"
+    M04_Logger.WriteError "[警告]", "-", "-", "値の取得失敗", "旧ブックの '" & address & "' から値を取得できませんでした。エラー: " & Err.Description
 End Function
 
 '--------------------------------------------------------------------------------------------------
