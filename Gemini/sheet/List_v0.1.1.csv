@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+﻿判断結果,本部,管内,,判断結果,型式,種類,ファイルパス,,処理対象箇所,処理No.,処理内容,,パス切り替え,機器,フォルダパス
+,大阪北,小曽根,,,,日新Cub-123TrB,C:\Users\N100\.vscode\Github\VBA-Inspection-Report-Generator\dist\_Template.xlsm\日新Ｃｕｂ変電所-123TrB Ry-2025.99.99（データ入力中）.xls, ,,1,旧ブック_シート名,,,N100,C:\Users\N100\.vscode\Github\
+,大阪南,野江,,,,日新Cub-456TrB,C:\Users\N100\.vscode\Github\VBA-Inspection-Report-Generator\dist\_Template.xlsm\日新Ｃｕｂ変電所-456TrB Ry-2025.99.99（データ入力中）.xls, ,,2,新ブック_シート名,,,,
+,神戸,南大阪,,,,日新D1-123TrB,C:\Users\N100\.vscode\Github\VBA-Inspection-Report-Generator\dist\_Template.xlsm\日新Ｄ１変電所-123TrB Ry-2025.99.99（データ入力中）.xls, ,,3,旧ブック_コピー元アドレス,,,,
+,奈良,我孫子,,,,日新D1-456TrB,C:\Users\N100\.vscode\Github\VBA-Inspection-Report-Generator\dist\_Template.xlsm\日新Ｄ１変電所-456TrB Ry-2025.99.99（データ入力中）.xls, ,,4,新ブック_コピー先アドレス,,,,
+,,神戸,,,,日立Cub-123TrB,C:\Users\N100\.vscode\Github\VBA-Inspection-Report-Generator\dist\_Template.xlsm\日立Ｃｕｂ変電所-123TrB Ry-2025.99.99（データ入力中）.xls, ,,5,新ブック_削除するアドレス,,,,
+,,尼崎,,,,日立Cub-456TrB,C:\Users\N100\.vscode\Github\VBA-Inspection-Report-Generator\dist\_Template.xlsm\日立Ｃｕｂ変電所-456TrB Ry-2025.99.99（データ入力中）.xls, ,,6,新ブック_入力するアドレス,,,,
+,,奈良,,,,日立自立盤変電所-123TrB,C:\Users\N100\.vscode\Github\VBA-Inspection-Report-Generator\dist\_Template.xlsm\日立自立盤変電所-123TrB Ry-2025.99.99（データ入力中）.xls, ,,7,新ブック_入力する内容,,,,
+,,吉野,,,SYT-L-4E1,日立自立盤変電所-456TrB,C:\Users\N100\.vscode\Github\VBA-Inspection-Report-Generator\dist\_Template.xlsm\日立自立盤変電所-456TrB Ry-2025.99.99（データ入力中）.xls, ,,,,,,,
+=======
 ﻿判断結果,本部,管内,,判断結果,型式,種類,ファイルパス,,処理対象箇所,処理No.,処理内容
 ,大阪北,小曽根,,,,日新Cub-123TrB,C:\Users\N100\Desktop\点検報告書作成支援ツール（変電）(20250430)\点検報告書(自動保存分)\日新Ｃｕｂ変電所-123TrB Ry-2025.99.99（データ入力中）.xls, ,,1,旧ブック_シート名
 ,大阪南,野江,,,,日新Cub-456TrB,C:\Users\N100\Desktop\点検報告書作成支援ツール（変電）(20250430)\点検報告書(自動保存分)\日新Ｃｕｂ変電所-456TrB Ry-2025.99.99（データ入力中）.xls, ,,2,新ブック_シート名
@@ -7,3 +18,4 @@
 ,,尼崎,,,,日立Cub-456TrB,C:\Users\N100\Desktop\点検報告書作成支援ツール（変電）(20250430)\点検報告書(自動保存分)\日立Ｃｕｂ変電所-456TrB Ry-2025.99.99（データ入力中）.xls, ,,6,新ブック_入力するアドレス
 ,,奈良,,,,日立自立盤変電所-123TrB,C:\Users\N100\Desktop\点検報告書作成支援ツール（変電）(20250430)\点検報告書(自動保存分)\日立自立盤変電所-123TrB Ry-2025.99.99（データ入力中）.xls, ,,7,新ブック_入力する内容
 ,,吉野,,,SYT-L-4E1,日立自立盤変電所-456TrB,C:\Users\N100\Desktop\点検報告書作成支援ツール（変電）(20250430)\点検報告書(自動保存分)\日立自立盤変電所-456TrB Ry-2025.99.99（データ入力中）.xls, ,,,
+>>>>>>> 4a358f29dfa0286bcc247843225878f0af2a21d0

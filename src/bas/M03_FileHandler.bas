@@ -7,9 +7,52 @@ Option Explicit
 Public Function CreateWorkbookFromTemplate(ByVal templateSheetName As String) As Workbook
     DebugLog "M03_FileHandler", "CreateWorkbookFromTemplate", "Start - templateSheetName: '" & templateSheetName & "'"
     
+<<<<<<< HEAD
+    ' ファイル名の生成ロジックを修正 (Ryの重複を回避)
+    newBookName = "_" & settingsSheet.Range("D17").Value & "-" & _
+                  settingsSheet.Range("D18").Value & "-" & _
+                  Format(settingsSheet.Range("D20").Value, "yyyy.mm.dd") & ".xls"
+    M06_DebugLogger.WriteDebugLog "生成された新しいファイル名: " & newBookName
+
+    ' 保存先フォルダの決定
+    saveFolderPath = Trim(settingsSheet.Range("D9").Value)
+    If saveFolderPath = "" Then
+        saveFolderPath = ThisWorkbook.path ' D9が空白の場合はVBA実行ファイルと同じフォルダ
+        M06_DebugLogger.WriteDebugLog "SettingsシートD9が空白のため、VBA実行ファイルと同じフォルダを保存先とします: " & saveFolderPath
+    Else
+        M06_DebugLogger.WriteDebugLog "SettingsシートD9から保存先フォルダを取得しました: " & saveFolderPath
+    End If
+
+    ' 安全なパス結合
+    newBookPath = fso.BuildPath(saveFolderPath, newBookName)
+    M06_DebugLogger.WriteDebugLog "新しいブックの保存先パス: " & newBookPath
+
+    ' 保存先フォルダが存在しない場合は作成
+    If Not fso.FolderExists(saveFolderPath) Then
+        M06_DebugLogger.WriteDebugLog "保存先フォルダが存在しないため作成します: " & saveFolderPath
+        fso.CreateFolder saveFolderPath
+    End If
+
+    fso.CopyFile templatePath, newBookPath, True
+    Set fso = Nothing
+
+    CreateNewBook = newBookPath
+    M04_Logger.WriteLog "新ブック作成", "作成パス: " & newBookPath
+    M06_DebugLogger.WriteDebugLog "新しいブックの作成が完了しました。"
+End Function
+
+'--------------------------------------------------------------------------------------------------
+' [Function] FileExists
+' [Description] 指定されたパスのファイルが存在するか確認する
+' [Args] path: ファイルパス
+' [Returns] 存在する場合 True, しない場合 False
+'--------------------------------------------------------------------------------------------------
+Public Function FileExists(ByVal path As String) As Boolean
+=======
     Dim templateSheet As Worksheet
     
     ' テンプレートシートを取得
+>>>>>>> 4a358f29dfa0286bcc247843225878f0af2a21d0
     On Error Resume Next
     Set templateSheet = ThisWorkbook.Sheets(templateSheetName)
     On Error GoTo 0
