@@ -1,5 +1,6 @@
 Option Explicit
 
+<<<<<<< HEAD
 '==================================================================================================
 ' [Module] M01_Main
 ' [Description] メインコントローラーモジュール
@@ -62,11 +63,17 @@ Public Sub StartProcess()
 
     M06_DebugLogger.WriteDebugLog "SettingsシートのD21に型式を書き込みます。"
     settingsSheet.Range("D21").Value = modelType
+=======
+' メインプロシージャ
+'================================================================================================'
+Sub Main()
+    DebugLog "M01_Main", "Main", "Start"
+>>>>>>> 4a358f29dfa0286bcc247843225878f0af2a21d0
     
-    ' Excelに関数の再計算を実行させる
-    Application.Calculate
-    M06_DebugLogger.WriteDebugLog "Excelの数式を再計算しました。"
+    ' 初期化
+    Initialize
 
+<<<<<<< HEAD
     ' 再計算された結果を読み取る
     templatePath = settingsSheet.Range("D24").Value
     M06_DebugLogger.WriteDebugLog "再計算後のテンプレートパス: " & templatePath
@@ -97,29 +104,48 @@ FatalErrorHandler:
 Finally:
     Application.ScreenUpdating = True
     M06_DebugLogger.WriteDebugLog "画面描画を再開し、処理を終了します。"
+=======
+    ' メイン処理
+    DebugLog "M01_Main", "Main", "Calling ProcessReports"
+    ProcessReports
+    DebugLog "M01_Main", "Main", "Returned from ProcessReports"
+
+    ' 終了処理
+    Finalize
+    
+    DebugLog "M01_Main", "Main", "End"
+>>>>>>> 4a358f29dfa0286bcc247843225878f0af2a21d0
 End Sub
 
-'--------------------------------------------------------------------------------------------------
-' [Function] GetValueFromOldBook
-' [Description] 旧ブックから指定されたアドレスの値を取得する
-' [Args] wb: 対象ワークブック, address: セルアドレス
-' [Returns] セルの値
-'--------------------------------------------------------------------------------------------------
-Private Function GetValueFromOldBook(ByVal wb As Workbook, ByVal address As String) As String
-    Dim sheetName As String
-    Dim rangeAddress As String
+' 初期化プロシージャ
+'================================================================================================'
+Private Sub Initialize()
+    DebugLog "M01_Main", "Initialize", "Start"
+    
+    ' ロガーの初期化
+    InitializeLogger
+    InitializeDebugLogger ' デバッグロガーの初期化を追加
 
-    M06_DebugLogger.WriteDebugLog "旧ブックの値取得を開始: " & address
-    On Error GoTo GetValueError
+    ' ログ開始
+    Log "処理開始"
+    
+    ' 設定の読み込み
+    DebugLog "M01_Main", "Initialize", "Calling LoadSettings"
+    LoadSettings
+    DebugLog "M01_Main", "Initialize", "Returned from LoadSettings"
+    
+    DebugLog "M01_Main", "Initialize", "End"
+End Sub
 
-    If M03_FileHandler.ParseAddress(address, sheetName, rangeAddress) Then
-        GetValueFromOldBook = wb.Worksheets(sheetName).Range(rangeAddress).Value
-        M06_DebugLogger.WriteDebugLog "値を取得しました: " & GetValueFromOldBook
-    Else
-        GetValueFromOldBook = "" ' 解析失敗
-    End If
-    Exit Function
+' 終了処理プロシージャ
+'================================================================================================'
+Private Sub Finalize()
+    DebugLog "M01_Main", "Finalize", "Start"
+    
+    ' ログ終了
+    Log "処理終了"
 
+<<<<<<< HEAD
 GetValueError:
     GetValueFromOldBook = ""
     M06_DebugLogger.WriteDebugLog "値の取得でエラーが発生しました。"
@@ -148,3 +174,11 @@ Private Function GetTemplatePathFromList(ByVal bookType As String) As String
         M06_DebugLogger.WriteDebugLog "テンプレートパスが見つかりませんでした。"
     End If
 End Function
+=======
+    ' ロガーのクリーンアップ
+    CleanupLogger
+    CleanupDebugLogger ' デバッグロガーのクリーンアップを追加
+    
+    DebugLog "M01_Main", "Finalize", "End"
+End Sub
+>>>>>>> 4a358f29dfa0286bcc247843225878f0af2a21d0

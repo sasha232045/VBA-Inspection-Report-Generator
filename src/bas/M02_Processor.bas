@@ -1,85 +1,83 @@
 Option Explicit
 
-'==================================================================================================
-' [Module] M02_Processor
-' [Description] データ処理コアロジックモジュール
-'==================================================================================================
+' グローバル変数
+'================================================================================================'
+Private settings As Object ' Scripting.Dictionary
 
-'--------------------------------------------------------------------------------------------------
-' [Sub] ExecuteAllTasks
-' [Description] Settingsシートの定義に基づき、全てのデータ移行タスクを実行する
-' [Args] oldBookPath: 旧ブックのフルパス, newBookPath: 新ブックのフルパス
-'--------------------------------------------------------------------------------------------------
-Public Sub ExecuteAllTasks(ByVal oldBookPath As String, ByVal newBookPath As String)
+' メイン処理
+'================================================================================================'
+Public Sub ProcessReports()
+    DebugLog "M02_Processor", "ProcessReports", "Start"
+    
+    ' 変数宣言
+    Dim dataSheet As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim templateSheetName As String
+    Dim outputSheetName As String
+    
+    ' 初期設定
+    Set dataSheet = ThisWorkbook.Sheets("List")
+    lastRow = GetLastRow(dataSheet, 1) ' A列を基準に行数を取得
+    DebugLog "M02_Processor", "ProcessReports", "Data sheet 'List' last row: " & lastRow
+    
+    ' 設定を辞書から取得
+    templateSheetName = settings("TemplateSheetName")
+    outputSheetName = settings("OutputSheetName")
+
+    ' デバッグログ
+    DebugLog "M02_Processor", "ProcessReports", "TemplateSheetName from settings: '" & templateSheetName & "'"
+    DebugLog "M02_Processor", "ProcessReports", "OutputSheetName from settings: '" & outputSheetName & "'"
+
+    ' データ行をループしてレポートを作成
+    For i = 2 To lastRow
+        DebugLog "M02_Processor", "ProcessReports", "Processing row: " & i
+        ' レポート作成
+        CreateReport dataSheet, i, templateSheetName, outputSheetName
+    Next i
+    
+    DebugLog "M02_Processor", "ProcessReports", "End"
+End Sub
+
+' 設定シートから設定を読み込み、グローバルな辞書に格納する
+'================================================================================================'
+Public Sub LoadSettings()
+    DebugLog "M02_Processor", "LoadSettings", "Start"
+    
+    Set settings = CreateObject("Scripting.Dictionary")
     Dim settingsSheet As Worksheet
     Dim lastRow As Long
     Dim i As Long
-    Dim oldWb As Workbook, newWb As Workbook
-    Dim oldSheetName As String, newSheetName As String
-    Dim copyFromAddr As String, copyToAddr As String
-    Dim deleteAddr As String
-    Dim inputAddr As String, inputValue As String
-    Dim sheetNo As String, procNo As String, procContent As String, procValue As String
-
-    M06_DebugLogger.WriteDebugLog "データ移行処理(ExecuteAllTasks)を開始します。"
-    M06_DebugLogger.WriteDebugLog "旧ブックパス: " & oldBookPath
-    M06_DebugLogger.WriteDebugLog "新ブックパス: " & newBookPath
-
-    Set settingsSheet = ThisWorkbook.Worksheets("Settings")
-    lastRow = settingsSheet.Cells(settingsSheet.Rows.Count, "A").End(xlUp).Row
-    M06_DebugLogger.WriteDebugLog "Settingsシートの最終行: " & lastRow
-
-    Set oldWb = M03_FileHandler.OpenWorkbook(oldBookPath)
-    Set newWb = M03_FileHandler.OpenWorkbook(newBookPath)
-
-    If oldWb Is Nothing Or newWb Is Nothing Then
-        M04_Logger.WriteError "[致命的エラー]", "-", "-", "ブックオープン失敗", "処理対象のブックが開けませんでした。"
-        M06_DebugLogger.WriteDebugLog "ブックが開けなかったため、処理を中断します。"
+    Dim key As String
+    Dim Value As String
+    
+    ' "Settings"シートを取得
+    On Error Resume Next
+    Set settingsSheet = ThisWorkbook.Sheets("Settings")
+    On Error GoTo 0
+    
+    If settingsSheet Is Nothing Then
+        Log "エラー: Settingsシートが見つかりません。"
+        DebugLog "M02_Processor", "LoadSettings", "Error: 'Settings' sheet not found. Exiting sub."
         Exit Sub
     End If
-
-    M06_DebugLogger.WriteDebugLog "SettingsシートのA19からループを開始します。"
-    For i = 19 To lastRow
-        On Error GoTo TaskErrorHandler
-
-        sheetNo = settingsSheet.Cells(i, "A").Value
-        procNo = settingsSheet.Cells(i, "B").Value
-        procContent = settingsSheet.Cells(i, "C").Value
-        procValue = settingsSheet.Cells(i, "D").Value
-        M06_DebugLogger.WriteDebugLog i & "行目: " & sheetNo & ", " & procNo & ", " & procContent & ", " & procValue
-
-        Select Case CInt(procNo) ' B列の数値で分岐
-            Case 1 '旧ブック_シート名'
-                oldSheetName = procValue
-            Case 2 '新ブック_シート名'
-                newSheetName = procValue
-            Case 3 '旧ブック_コピー元アドレス'
-                copyFromAddr = procValue
-            Case 4 '新ブック_コピー先アドレス'
-                copyToAddr = procValue
-                CopyData oldWb, newWb, oldSheetName, newSheetName, copyFromAddr, copyToAddr, sheetNo, procNo
-            Case 5 '新ブック_削除するアドレス'
-                deleteAddr = procValue
-                DeleteData newWb, newSheetName, deleteAddr, sheetNo, procNo
-            Case 6 '新ブック_入力するアドレス'
-                inputAddr = procValue
-            Case 7 '新ブック_入力する内容'
-                inputValue = procValue
-                InputData newWb, newSheetName, inputAddr, inputValue, sheetNo, procNo
-        End Select
-
-ContinueNextTask:
+    DebugLog "M02_Processor", "LoadSettings", "'Settings' sheet found."
+    
+    ' C列を基準に最終行を取得
+    lastRow = GetLastRow(settingsSheet, 3)
+    DebugLog "M02_Processor", "LoadSettings", "Settings sheet last row (Column C): " & lastRow
+    
+    ' C列とD列から設定を読み込む
+    For i = 2 To lastRow
+        key = settingsSheet.Cells(i, 3).Value
+        Value = settingsSheet.Cells(i, 4).Value
+        If key <> "" Then
+            settings(key) = Value
+            DebugLog "M02_Processor", "LoadSettings", "Loaded setting: Key='" & key & "', Value='" & Value & "'"
+        End If
     Next i
-
-    M06_DebugLogger.WriteDebugLog "すべてのタスクが完了しました。ブックを保存して閉じます。"
-    oldWb.Close SaveChanges:=False
-    newWb.Close SaveChanges:=True
-    Exit Sub
-
-TaskErrorHandler:
-    M06_DebugLogger.WriteDebugLog "タスク実行中にエラーが発生しました。エラーを記録し、次のタスクへ進みます。"
-    M04_Logger.WriteError "[警告]", sheetNo, procNo, procContent, Err.Description
-    Resume ContinueNextTask
+    
+    DebugLog "M02_Processor", "LoadSettings", "End"
 End Sub
 
 '--------------------------------------------------------------------------------------------------

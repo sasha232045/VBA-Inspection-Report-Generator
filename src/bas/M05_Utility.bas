@@ -1,40 +1,12 @@
 Option Explicit
 
-'==================================================================================================
-' [Module] M05_Utility
-' [Description] 汎用ユーティリティモジュール
-'==================================================================================================
-
-'--------------------------------------------------------------------------------------------------
-' [Function] GetRangeFromAddressString
-' [Description] カンマ区切りのアドレス文字列をRangeオブジェクトに変換する
-' [Args] sht: 対象シート, addressString: アドレス文字列
-' [Returns] 複数の範囲を含む単一のRangeオブジェクト
-'--------------------------------------------------------------------------------------------------
-Public Function GetRangeFromAddressString(ByVal sht As Worksheet, ByVal addressString As String) As Range
-    Dim combinedRange As Range
-    Dim addresses() As String
-    Dim addr As Variant
-
-    M06_DebugLogger.WriteDebugLog "アドレス文字列をRangeオブジェクトに変換します: " & addressString
-    On Error GoTo ErrorHandler
-
-    addresses = Split(addressString, ",")
-
-    For Each addr In addresses
-        If combinedRange Is Nothing Then
-            Set combinedRange = sht.Range(Trim(addr))
-        Else
-            Set combinedRange = Union(combinedRange, sht.Range(Trim(addr)))
-        End If
-    Next addr
-
-    Set GetRangeFromAddressString = combinedRange
-    M06_DebugLogger.WriteDebugLog "Rangeオブジェクトの変換に成功しました。"
-    Exit Function
-
-ErrorHandler:
-    Set GetRangeFromAddressString = Nothing
-    M06_DebugLogger.WriteDebugLog "アドレス文字列の変換中にエラーが発生しました: " & addressString & " エラー: " & Err.Description
-    M04_Logger.WriteError "[警告]", "-", "-", "アドレス変換エラー", "'" & addressString & "' は有効なアドレスではありません。詳細: " & Err.Description
+' 指定されたシートと列の最終行を取得する
+' @param ws 対象のワークシート
+' @param column 最終行を取得する列番号
+' @return 最終行番号
+'================================================================================================'
+Public Function GetLastRow(ByVal ws As Worksheet, ByVal column As Long) As Long
+    DebugLog "M05_Utility", "GetLastRow", "Start - Sheet: '" & ws.Name & "', Column: " & column
+    GetLastRow = ws.Cells(ws.Rows.Count, column).End(xlUp).row
+    DebugLog "M05_Utility", "GetLastRow", "End - Last row is " & GetLastRow
 End Function

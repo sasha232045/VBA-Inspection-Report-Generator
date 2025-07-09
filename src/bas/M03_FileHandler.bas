@@ -1,45 +1,13 @@
 Option Explicit
 
-'==================================================================================================
-' [Module] M03_FileHandler
-' [Description] ファイル操作関連モジュール
-'==================================================================================================
-
-'--------------------------------------------------------------------------------------------------
-' [Function] OpenWorkbook
-' [Description] 指定されたパスのワークブックを開く
-' [Args] path: ファイルパス
-' [Returns] Workbookオブジェクト (失敗時: Nothing)
-'--------------------------------------------------------------------------------------------------
-Public Function OpenWorkbook(ByVal path As String) As Workbook
-    M06_DebugLogger.WriteDebugLog "ワークブックを開きます: " & path
-    On Error Resume Next
-    Set OpenWorkbook = Workbooks.Open(path)
-    On Error GoTo 0
-    If OpenWorkbook Is Nothing Then
-        M06_DebugLogger.WriteDebugLog "ワークブックを開けませんでした。"
-    End If
-End Function
-
-'--------------------------------------------------------------------------------------------------
-' [Function] CreateNewBook
-' [Description] テンプレートをコピーして新しいブックを作成する
-' [Args] templatePath: テンプレートのフルパス
-' [Returns] 新しいブックのフルパス
-'--------------------------------------------------------------------------------------------------
-Public Function CreateNewBook(ByVal templatePath As String) As String
-    Dim fso As Object
-    Dim newBookName As String
-    Dim newBookPath As String
-    Dim settingsSheet As Worksheet
-    Dim saveFolderPath As String ' 新しい保存先フォルダ
-
-    M06_DebugLogger.WriteDebugLog "新しいブックの作成を開始します。"
-    M06_DebugLogger.WriteDebugLog "テンプレートパス: " & templatePath
-
-    Set fso = CreateObject("Scripting.FileSystemObject")
-    Set settingsSheet = ThisWorkbook.Worksheets("Settings")
+' テンプレートシートをコピーして新しいブックを作成する
+' @param templateSheetName テンプレートシート名
+' @return 新しいブック
+'================================================================================================'
+Public Function CreateWorkbookFromTemplate(ByVal templateSheetName As String) As Workbook
+    DebugLog "M03_FileHandler", "CreateWorkbookFromTemplate", "Start - templateSheetName: '" & templateSheetName & "'"
     
+<<<<<<< HEAD
     ' ファイル名の生成ロジックを修正 (Ryの重複を回避)
     newBookName = "_" & settingsSheet.Range("D17").Value & "-" & _
                   settingsSheet.Range("D18").Value & "-" & _
@@ -80,36 +48,67 @@ End Function
 ' [Returns] 存在する場合 True, しない場合 False
 '--------------------------------------------------------------------------------------------------
 Public Function FileExists(ByVal path As String) As Boolean
+=======
+    Dim templateSheet As Worksheet
+    
+    ' テンプレートシートを取得
+>>>>>>> 4a358f29dfa0286bcc247843225878f0af2a21d0
     On Error Resume Next
-    FileExists = (Dir(path) <> "")
+    Set templateSheet = ThisWorkbook.Sheets(templateSheetName)
     On Error GoTo 0
-End Function
-
-'--------------------------------------------------------------------------------------------------
-' [Public Function] ParseAddress
-' [Description] 正規表現を使用して、'シート名'!セル範囲 の形式のアドレス文字列を解析する
-' [Args] address: 解析対象のアドレス文字列
-' [Args] outSheetName: (出力) 抽出されたシート名
-' [Args] outRangeAddress: (出力) 抽出されたセル範囲
-' [Returns] 成功した場合 True, 失敗した場合 False
-'--------------------------------------------------------------------------------------------------
-Public Function ParseAddress(ByVal address As String, ByRef outSheetName As String, ByRef outRangeAddress As String) As Boolean
-    Dim regex As Object
-    Dim matches As Object
-
-    M06_DebugLogger.WriteDebugLog "アドレス解析を開始: " & address
-    Set regex = CreateObject("VBScript.RegExp")
-    regex.Pattern = "^'?(.*?)'?!([^!]+)$" ' シート名とセル範囲を抽出する正規表現
-
-    If regex.Test(address) Then
-        Set matches = regex.Execute(address)
-        outSheetName = matches(0).SubMatches(0)
-        outRangeAddress = matches(0).SubMatches(1)
-        ParseAddress = True
-        M06_DebugLogger.WriteDebugLog "解析成功: シート名='" & outSheetName & "', アドレス='" & outRangeAddress & "'"
-    Else
-        ParseAddress = False
-        M06_DebugLogger.WriteDebugLog "解析失敗: 有効なアドレス形式ではありません。"
-        M04_Logger.WriteError "[警告]", "-", "-", "アドレス解析失敗", "'" & address & "' は有効な形式ではありません。"
+    
+    If templateSheet Is Nothing Then
+        Log "エラー: テンプレートシート '" & templateSheetName & "' が見つかりません。"
+        DebugLog "M03_FileHandler", "CreateWorkbookFromTemplate", "Error: Template sheet '" & templateSheetName & "' not found. Returning Nothing."
+        Set CreateWorkbookFromTemplate = Nothing
+        Exit Function
     End If
+    
+    DebugLog "M03_FileHandler", "CreateWorkbookFromTemplate", "Template sheet '" & templateSheetName & "' found. Copying to new workbook."
+    
+    ' テンプレートシートを新しいブックにコピー
+    templateSheet.Copy
+    
+    ' 新しいブックを返す
+    Set CreateWorkbookFromTemplate = ActiveWorkbook
+    DebugLog "M03_FileHandler", "CreateWorkbookFromTemplate", "End - Workbook created successfully."
 End Function
+
+' ブックを保存する
+' @param wb 保存するブック
+' @param fileName ファイル名
+'================================================================================================'
+Public Sub SaveWorkbook(ByVal wb As Workbook, ByVal fileName As String)
+    DebugLog "M03_FileHandler", "SaveWorkbook", "Start - fileName: '" & fileName & "'"
+    
+    Dim saveFolderPath As String
+    saveFolderPath = ThisWorkbook.Path & "\dist"
+    DebugLog "M03_FileHandler", "SaveWorkbook", "Save folder path: '" & saveFolderPath & "'"
+    
+    ' distフォルダが存在しない場合は作成
+    If Dir(saveFolderPath, vbDirectory) = "" Then
+        DebugLog "M03_FileHandler", "SaveWorkbook", "'dist' folder not found. Creating it."
+        MkDir saveFolderPath
+    End If
+    
+    Dim fullPath As String
+    fullPath = saveFolderPath & "\" & fileName
+    DebugLog "M03_FileHandler", "SaveWorkbook", "Saving workbook to: '" & fullPath & "'"
+    
+    ' ブックを保存
+    On Error Resume Next
+    wb.SaveAs fileName:=fullPath, FileFormat:=xlOpenXMLWorkbook
+    If Err.Number <> 0 Then
+        Log "エラー: ファイルの保存に失敗しました。 " & fullPath
+        DebugLog "M03_FileHandler", "SaveWorkbook", "Error on SaveAs: " & Err.Description
+        On Error GoTo 0
+        wb.Close SaveChanges:=False
+        Exit Sub
+    End If
+    On Error GoTo 0
+    
+    ' ブックを閉じる
+    wb.Close SaveChanges:=False
+    DebugLog "M03_FileHandler", "SaveWorkbook", "Workbook saved and closed successfully."
+    DebugLog "M03_FileHandler", "SaveWorkbook", "End"
+End Sub
