@@ -105,8 +105,8 @@ Public Function CreateNewBook(ByVal templatePath As String) As String
     On Error Resume Next
     fso.CopyFile templatePath, newBookPath, True ' True = 上書き許可
     If Err.Number <> 0 Then
-        M06_DebugLogger.WriteDebugLog "ファイルコピー中にエラーが発生しました: " & Err.Description
-        M04_Logger.WriteError "[エラー]", "-", "-", "ファイルコピー失敗", "テンプレートファイルのコピーに失敗しました。エラー: " & Err.Description
+        M06_DebugLogger.WriteDebugLog "ファイルコピー中にエラーが発生しました: " & Err.description
+        M04_Logger.WriteError "[エラー]", "-", "-", "ファイルコピー失敗", "テンプレートファイルのコピーに失敗しました。エラー: " & Err.description
     End If
     On Error GoTo 0
     
@@ -194,7 +194,8 @@ Public Sub OpenFileLocation(ByVal filePath As String)
     Exit Sub
     
 OpenFolderError:
-    MsgBox "フォルダを開くことができませんでした。" & vbCrLf & "エラー: " & Err.Description, vbCritical, "エラー"
-    M06_DebugLogger.WriteDebugLog "フォルダを開く際にエラーが発生しました: " & Err.Description
+    MsgBox "フォルダを開くことができませんでした。" & vbCrLf & "エラー: " & Err.description, vbCritical, "エラー"
+    M06_DebugLogger.WriteDebugLog "フォルダを開く際にエラーが発生しました: " & Err.description
     Set fso = Nothing
 End Sub
+

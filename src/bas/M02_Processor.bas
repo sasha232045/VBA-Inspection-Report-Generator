@@ -109,7 +109,7 @@ ContinueNextTask:
     On Error Resume Next
     newWb.Save ' 強制保存
     If Err.Number <> 0 Then
-        M06_DebugLogger.WriteDebugLog "保存時にエラーが発生しましたが、処理を続行します: " & Err.Description
+        M06_DebugLogger.WriteDebugLog "保存時にエラーが発生しましたが、処理を続行します: " & Err.description
     End If
     On Error GoTo 0
     
@@ -130,7 +130,7 @@ RestoreSettings:
 
 TaskErrorHandler:
     M06_DebugLogger.WriteDebugLog "タスク実行中にエラーが発生しました。エラーを記録し、次のタスクへ進みます。"
-    M04_Logger.WriteError "[警告]", sheetNo, procNo, procContent, "エラー詳細: " & Err.Description
+    M04_Logger.WriteError "[警告]", sheetNo, procNo, procContent, "エラー詳細: " & Err.description
     Resume ContinueNextTask
 End Sub
 
@@ -147,8 +147,8 @@ Private Sub CopyData(oldWb As Workbook, newWb As Workbook, oldShtName As String,
     Exit Sub
     
 CopyError:
-    M06_DebugLogger.WriteDebugLog "コピー処理でエラーが発生しました: " & Err.Description
-    M04_Logger.WriteError "[警告]", sheetNo, procNo, "コピー処理エラー", "旧: " & oldShtName & "!" & srcAddr & " -> 新: " & newShtName & "!" & dstAddr & ", エラー: " & Err.Description
+    M06_DebugLogger.WriteDebugLog "コピー処理でエラーが発生しました: " & Err.description
+    M04_Logger.WriteError "[警告]", sheetNo, procNo, "コピー処理エラー", "旧: " & oldShtName & "!" & srcAddr & " -> 新: " & newShtName & "!" & dstAddr & ", エラー: " & Err.description
 End Sub
 
 '--------------------------------------------------------------------------------------------------
@@ -168,10 +168,10 @@ Private Sub DeleteData(wb As Workbook, shtName As String, addr As String, sheetN
             On Error Resume Next
             If cell.MergeCells Then
                 cell.MergeArea.ClearContents
-                M06_DebugLogger.WriteDebugLog "結合セル " & cell.MergeArea.Address & " の内容を削除しました。"
+                M06_DebugLogger.WriteDebugLog "結合セル " & cell.MergeArea.address & " の内容を削除しました。"
             Else
                 cell.ClearContents
-                M06_DebugLogger.WriteDebugLog "セル " & cell.Address & " の内容を削除しました。"
+                M06_DebugLogger.WriteDebugLog "セル " & cell.address & " の内容を削除しました。"
             End If
             On Error GoTo DeleteError
         Next cell
@@ -183,8 +183,8 @@ Private Sub DeleteData(wb As Workbook, shtName As String, addr As String, sheetN
     Exit Sub
     
 DeleteError:
-    M06_DebugLogger.WriteDebugLog "削除処理でエラーが発生しました: " & Err.Description
-    M04_Logger.WriteError "[警告]", sheetNo, procNo, "削除処理エラー", "アドレス: " & addr & ", エラー: " & Err.Description
+    M06_DebugLogger.WriteDebugLog "削除処理でエラーが発生しました: " & Err.description
+    M04_Logger.WriteError "[警告]", sheetNo, procNo, "削除処理エラー", "アドレス: " & addr & ", エラー: " & Err.description
 End Sub
 
 '--------------------------------------------------------------------------------------------------
@@ -207,6 +207,6 @@ Private Sub InputData(wb As Workbook, shtName As String, addr As String, val As 
     Exit Sub
     
 InputError:
-    M06_DebugLogger.WriteDebugLog "入力処理でエラーが発生しました: " & Err.Description
-    M04_Logger.WriteError "[警告]", sheetNo, procNo, "入力処理エラー", "アドレス: " & addr & ", 値: " & val & ", エラー: " & Err.Description
+    M06_DebugLogger.WriteDebugLog "入力処理でエラーが発生しました: " & Err.description
+    M04_Logger.WriteError "[警告]", sheetNo, procNo, "入力処理エラー", "アドレス: " & addr & ", 値: " & val & ", エラー: " & Err.description
 End Sub

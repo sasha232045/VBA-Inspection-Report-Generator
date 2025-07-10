@@ -127,8 +127,8 @@ Public Sub StartProcess()
     GoTo Finally
 
 FatalErrorHandler:
-    M06_DebugLogger.WriteDebugLog "致命的なエラーが発生しました。処理を中断します。 エラー: " & Err.Description
-    M04_Logger.WriteError "[致命的エラー]", "-", "-", "実行時エラー: " & Err.Number, Err.Description
+    M06_DebugLogger.WriteDebugLog "致命的なエラーが発生しました。処理を中断します。 エラー: " & Err.description
+    M04_Logger.WriteError "[致命的エラー]", "-", "-", "実行時エラー: " & Err.Number, Err.description
     MsgBox "致命的なエラーが発生しました。処理を中断します。詳細はErrorシートを確認してください。"
 
 Finally:
@@ -173,5 +173,7 @@ Private Function GetValueFromOldBook(ByVal wb As Workbook, ByVal address As Stri
 GetValueError:
     GetValueFromOldBook = ""
     M06_DebugLogger.WriteDebugLog "値の取得でエラーが発生しました。"
-    M04_Logger.WriteError "[警告]", "-", "-", "値の取得失敗", "旧ブックの '" & address & "' から値を取得できませんでした。エラー: " & Err.Description
+    M04_Logger.WriteError "[警告]", "-", "-", "値の取得失敗", "旧ブックの '" & address & "' から値を取得できませんでした。エラー: " & Err.description
 End Function
+
+

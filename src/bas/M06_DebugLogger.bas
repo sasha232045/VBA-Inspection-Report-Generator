@@ -53,3 +53,4 @@ Public Sub WriteDebugLog(ByVal message As String)
         debugSheet.Cells(lastRow + 1, 2).Value = message
     End If
 End Sub
+

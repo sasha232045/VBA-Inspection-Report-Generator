@@ -7,7 +7,7 @@ Option Explicit
 '================================================================================================'
 Public Function GetLastRow(ByVal ws As Worksheet, ByVal column As Long) As Long
     M06_DebugLogger.WriteDebugLog "GetLastRow - Sheet: '" & ws.Name & "', Column: " & column
-    GetLastRow = ws.Cells(ws.Rows.Count, column).End(xlUp).row
+    GetLastRow = ws.Cells(ws.Rows.Count, column).End(xlUp).Row
     M06_DebugLogger.WriteDebugLog "GetLastRow - Last row is " & GetLastRow
 End Function
 
@@ -21,7 +21,7 @@ Public Function GetRangeFromAddressString(ByVal ws As Worksheet, ByVal addressSt
     On Error Resume Next
     Set GetRangeFromAddressString = ws.Range(addressStr)
     If Err.Number <> 0 Then
-        M06_DebugLogger.WriteDebugLog "アドレス文字列の解析に失敗しました: " & addressStr & ", エラー: " & Err.Description
+        M06_DebugLogger.WriteDebugLog "アドレス文字列の解析に失敗しました: " & addressStr & ", エラー: " & Err.description
         Set GetRangeFromAddressString = Nothing
     Else
         M06_DebugLogger.WriteDebugLog "アドレス文字列を正常に解析しました: " & addressStr
