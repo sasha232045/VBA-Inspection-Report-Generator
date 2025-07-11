@@ -13,7 +13,7 @@ Private Const ERROR_SHEET_NAME As String = "ErrorLog"
 ' [Description] LogシートとErrorシートを初期化する
 '--------------------------------------------------------------------------------------------------
 Public Sub InitializeLogs()
-    M06_DebugLogger.WriteDebugLog "LogシートとErrorシートを初期化します。"
+    ' M06_DebugLogger.WriteDebugLog "LogシートとErrorシートを初期化します。"
     InitializeSheet LOG_SHEET_NAME, Array("日時", "レベル", "処理内容", "詳細")
     InitializeSheet ERROR_SHEET_NAME, Array("日時", "エラーレベル", "処理シートNo", "処理No.", "エラー内容", "エラー詳細")
 End Sub
