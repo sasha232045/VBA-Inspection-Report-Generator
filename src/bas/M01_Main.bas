@@ -10,13 +10,10 @@ Option Explicit
 ' [Description] 処理全体の流れを制御するメインプロシージャ
 '--------------------------------------------------------------------------------------------------
 Public Sub StartProcess()
-    Dim oldBookPath As String
-    Dim judgeAddress As String
-    Dim modelType As String ' 「型式」を格納する変数
-    Dim templatePath As String
-    Dim newBookPath As String
-    Dim oldWb As Workbook
+    Dim inputSheet As Worksheet
     Dim settingsSheet As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
 
     M06_DebugLogger.InitializeDebugLog
     M06_DebugLogger.WriteDebugLog "メイン処理を開始します。"
@@ -37,6 +34,80 @@ Public Sub StartProcess()
     
     M04_Logger.InitializeLogs
     M04_Logger.WriteLog "処理開始"
+
+    Set inputSheet = ThisWorkbook.Worksheets("入力")
+    Set settingsSheet = ThisWorkbook.Worksheets("Settings")
+    lastRow = inputSheet.Cells(inputSheet.Rows.Count, "B").End(xlUp).Row
+
+    M06_DebugLogger.WriteDebugLog "入力シートの最終行: " & lastRow
+
+    Dim lastNewBookPath As String
+
+    For i = 2 To lastRow
+        M06_DebugLogger.WriteDebugLog "入力シートの " & i & "行目の処理を開始します。"
+        
+        ' 入力シートの内容をSettingsシートに転記
+        settingsSheet.Range("D7").Value = inputSheet.Cells(i, "B").Value
+        settingsSheet.Range("D8").Value = inputSheet.Cells(i, "C").Value
+        settingsSheet.Range("D9").Value = inputSheet.Cells(i, "D").Value
+        settingsSheet.Range("D10").Value = inputSheet.Cells(i, "E").Value
+        settingsSheet.Range("D11").Value = inputSheet.Cells(i, "G").Value
+        
+        M06_DebugLogger.WriteDebugLog "入力シートからSettingsシートへの転記が完了しました。"
+
+        ' 一行分の処理を実行
+        lastNewBookPath = ProcessInputRow()
+        
+        M06_DebugLogger.WriteDebugLog "入力シートの " & i & "行目の処理が完了しました。"
+    Next i
+
+    M04_Logger.WriteLog "全処理正常終了"
+    M06_DebugLogger.WriteDebugLog "メイン処理が正常に終了しました。"
+    
+    ' 処理完了メッセージと保存フォルダを開く
+    Dim userResponse As VbMsgBoxResult
+    userResponse = MsgBox("すべての処理が完了しました。" & vbCrLf & vbCrLf & _
+                         "最後に作成されたファイル: " & Dir(lastNewBookPath) & vbCrLf & _
+                         "保存場所: " & lastNewBookPath & vbCrLf & vbCrLf & _
+                         "保存フォルダを開きますか？", _
+                         vbYesNo + vbInformation, "処理完了")
+    
+    If userResponse = vbYes Then
+        M06_DebugLogger.WriteDebugLog "保存フォルダを開きます。"
+        M03_FileHandler.OpenFileLocation lastNewBookPath
+    End If
+
+Finally:
+    ' アプリケーション設定を復元
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts = True
+    Application.StatusBar = True
+    Application.EnableEvents = True
+    Application.AskToUpdateLinks = True
+    
+    ' AlertBeforeOverwritingの安全な復元
+    On Error Resume Next
+    Application.AlertBeforeOverwriting = True
+    On Error GoTo 0
+    
+    Application.Calculation = xlCalculationAutomatic ' 計算を自動に戻す
+    
+    M06_DebugLogger.WriteDebugLog "アプリケーション設定を復元し、画面描画を再開し、処理を終了します。"
+End Sub
+
+'--------------------------------------------------------------------------------------------------
+' [Sub] ProcessInputRow
+' [Description] 入力シート1行分のデータ処理を実行する
+'--------------------------------------------------------------------------------------------------
+Private Function ProcessInputRow() As String
+    Dim oldBookPath As String
+    Dim judgeAddress As String
+    Dim modelType As String ' 「型式」を格納する変数
+    Dim templatePath As String
+    Dim newBookPath As String
+    Dim oldWb As Workbook
+    Dim settingsSheet As Worksheet
+    Dim retryCount As Integer
 
     On Error GoTo FatalErrorHandler
 
@@ -87,8 +158,11 @@ Public Sub StartProcess()
     M06_DebugLogger.WriteDebugLog "SettingsシートのD22に型式を書き込みます。"
     settingsSheet.Range("D22").Value = modelType
     
-    ' Excelに関数の再計算を実行させる
+    ' XLOOKUPの計算完了を待つ
     Application.Calculate
+    DoEvents
+    Application.Wait (Now + TimeValue("00:00:01") / 2) ' 500ms待機
+    
     M06_DebugLogger.WriteDebugLog "Excelの数式を再計算しました。"
 
     ' 再計算された結果を読み取る
@@ -110,44 +184,20 @@ Public Sub StartProcess()
     M04_Logger.WriteLog "処理正常終了"
     M06_DebugLogger.WriteDebugLog "メイン処理が正常に終了しました。"
     
-    ' 処理完了メッセージと保存フォルダを開く
-    Dim userResponse As VbMsgBoxResult
-    userResponse = MsgBox("処理が完了しました。" & vbCrLf & vbCrLf & _
-                         "作成されたファイル: " & Dir(newBookPath) & vbCrLf & _
-                         "保存場所: " & newBookPath & vbCrLf & vbCrLf & _
-                         "保存フォルダを開きますか？", _
-                         vbYesNo + vbInformation, "処理完了")
+    ProcessInputRow = newBookPath
     
-    If userResponse = vbYes Then
-        M06_DebugLogger.WriteDebugLog "保存フォルダを開きます。"
-        ' より詳細な機能を使用してファイルを選択状態で開く
-        M03_FileHandler.OpenFileLocation newBookPath
-    End If
-
+    ' 処理完了後、次の行へ
     GoTo Finally
 
 FatalErrorHandler:
-    M06_DebugLogger.WriteDebugLog "致命的なエラーが発生しました。処理を中断します。 エラー: " & Err.description
-    M04_Logger.WriteError "[致命的エラー]", "-", "-", "実行時エラー: " & Err.Number, Err.description
-    MsgBox "致命的なエラーが発生しました。処理を中断します。詳細はErrorシートを確認してください。"
+    M06_DebugLogger.WriteDebugLog "致命的なエラーが発生しました。処理を中断します。 エラー: " & Err.Description
+    M04_Logger.WriteError "[致命的エラー]", "-", "-", "実行時エラー: " & Err.Number, Err.Description
+    ' MsgBox "致命的なエラーが発生しました。処理を中断します。詳細はErrorシートを確認してください。"
 
 Finally:
-    ' アプリケーション設定を復元
-    Application.ScreenUpdating = True
-    Application.DisplayAlerts = True
-    Application.StatusBar = True
-    Application.EnableEvents = True
-    Application.AskToUpdateLinks = True
-    
-    ' AlertBeforeOverwritingの安全な復元
-    On Error Resume Next
-    Application.AlertBeforeOverwriting = True
-    On Error GoTo 0
-    
-    Application.Calculation = xlCalculationAutomatic ' 計算を自動に戻す
-    
-    M06_DebugLogger.WriteDebugLog "アプリケーション設定を復元し、画面描画を再開し、処理を終了します。"
-End Sub
+    ' このレベルでのFinallyは不要。StartProcessのFinallyで一括処理
+End Function
+
 
 '--------------------------------------------------------------------------------------------------
 ' [Function] GetValueFromOldBook

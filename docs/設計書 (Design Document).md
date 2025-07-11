@@ -94,7 +94,7 @@ Excel VBA を使用して、検査報告書を自動生成するシステムの�
 - `LoadSettings`: `Settings` シートの C, D 列からキーと値を読み取り、`settings` に格納する。
 - `ProcessReports`: `List` シートのデータに基づいてループ処理を行い、`CreateReport` を呼び出す。
 - `CreateReport`: `M03_FileHandler` を使ってレポートブックを作成し、データを転記し、保存する。
-- `ExecuteAllTasks`: Settingsシートの51行目以降のタスクリストを実行する（開始行を34行目から51行目に変更）
+- `ExecuteAllTasks`: Settingsシートの34行目以降のタスクリストを実行する
 
 ### M03_FileHandler
 

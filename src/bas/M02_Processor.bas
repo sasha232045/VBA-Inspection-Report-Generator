@@ -55,8 +55,8 @@ Public Sub ExecuteAllTasks(ByVal oldBookPath As String, ByVal newBookPath As Str
         GoTo RestoreSettings
     End If
 
-    M06_DebugLogger.WriteDebugLog "SettingsシートのA19からループを開始します。"
-    For i = 19 To lastRow
+    M06_DebugLogger.WriteDebugLog "SettingsシートのA34からループを開始します。"
+    For i = 34 To lastRow
         On Error GoTo TaskErrorHandler
 
         sheetNo = settingsSheet.Cells(i, "A").Value
